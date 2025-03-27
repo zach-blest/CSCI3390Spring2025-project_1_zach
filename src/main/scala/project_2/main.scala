@@ -115,15 +115,16 @@ object main{
       } else {
         return this
       }
-
-      def estimate(): Double = {
-        if (bucket.isEmpty) {
-          return 0.0
-        }
-        // F0 estimate is: |B| * 2^z
-        return bucket.size * scala.math.pow(2, z)
     }
-  }
+
+    def estimate(): Double = {
+      if (bucket.isEmpty) {
+        return 0.0
+      }
+      // F0 estimate is: |B| * 2^z
+      return bucket.size * scala.math.pow(2, z)
+    }
+
 
 
   def tidemark(x: RDD[String], trials: Int): Double = {
