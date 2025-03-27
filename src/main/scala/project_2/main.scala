@@ -197,8 +197,8 @@ object main{
     }
     val input_path = args(0)
 
-  //    val df = spark.read.format("csv").load("data/2014to2017.csv")
-    val df = spark.read.format("csv").load(input_path)
+    val df = spark.read.format("csv").load("data/2014to2017.csv")
+    //val df = spark.read.format("csv").load(input_path)
     val dfrdd = df.rdd.map(row => row.getString(0))
 
     val startTimeMillis = System.currentTimeMillis()
