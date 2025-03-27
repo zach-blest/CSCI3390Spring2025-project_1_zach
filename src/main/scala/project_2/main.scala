@@ -146,8 +146,8 @@ object main{
     } else {
       means(means.size / 2)
     }
-
-    median
+    val meadianL = median.toLong
+    meadianL
   }
 
 
