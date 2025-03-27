@@ -67,10 +67,10 @@ object main{
 /* A constructor that requies intialize the bucket and the z value. The bucket size is the bucket size of the sketch. */
 
     var bucket: Set[(String, Int)] = bucket_in
-    var z: Int =
+    var z: Int = z_in
 
     val BJKST_bucket_size = bucket_size_in
-    val z = z_in
+    //val z = z_in
 
     def this(s: String, z_of_s: Int, bucket_size_in: Int){
       /* A constructor that allows you pass in a single string, zeroes of the string, and the bucket size to initialize the sketch */
