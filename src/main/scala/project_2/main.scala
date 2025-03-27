@@ -116,7 +116,10 @@ object main{
 
 
   def exact_F2(x: RDD[String]) : Long = {
-
+    x.map(plate => (plate, 1L))
+      .reduceByKey(_ + _)
+      .map { case (_, count) => count * count}
+      .reduce(_ + _)
   }
 
 
