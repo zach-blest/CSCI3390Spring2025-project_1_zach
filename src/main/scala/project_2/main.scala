@@ -108,7 +108,26 @@ object main{
 
 
   def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
+    val trials = width * depth
+    val hashFunctions = Seq.fill(trials)(new four_universal_Radamacher_hash_function())
 
+    val sketches = x.flatMap { s => 
+      hashFunctions.amp(has, hash.hash(s).toInt)
+    }.reduceByKey(_ + _).map {
+      case (hash, sum) => sum * sum
+    }.collect()
+
+    val groups = sketches.grouped(width).toSeq.map(_.sum.toDouble / width)
+
+    val means = groups.sorted
+    val median = if (means.size % 2 == 0) {
+      val i = means.size / 2
+      (means(i - 1) + means(i)) / 2.0
+    } else {
+      means(means.size / 2)
+    }
+
+    return median
   }
 
 
