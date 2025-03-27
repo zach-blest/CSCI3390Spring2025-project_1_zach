@@ -78,31 +78,50 @@ object main{
     }
 
     def +(that: BJKSTSketch): BJKSTSketch = {    /* Merging two sketches */
-      val combinedBucket = (this.bucket ++ that.bucket)
+      if (this.bucket.isEmpty) return that
+      if (that.bucket.isEmpty) return this
 
-      if (combinedBucket.size > BJKST_bucket_size) {
-        bucket = combinedBucket.toSeq.sortBy(_._2).take(BJKST_bucket_size).toSet
-      } else {
-        bucket = combinedBucket
+      val merged_bucket = this.bucket ++ that.bucket
+      val merged_z = scala.math.max(this.z, that.z)
+
+      var filtered_bucket = merged_bucket.filter(_._2 >= merged_z)
+      var final_z = merged_z
+
+      while (filtered_bucket.size > BJKST_bucket_size && !filtered_bucket.isEmpty){
+        final_z += 1
+        filtered_bucket = filtered_bucket.filter(_._2 >= final_z)
       }
 
-      z = bucket.minBy(_._2)._2
-
-      this
+      return new BJKSTSketch(filtered_bucket, final_z, BJKST_bucket_size)
     }
 
     def add_string(s: String, z_of_s: Int): BJKSTSketch = {   /* add a string to the sketch */
-      if (z_of_s < this.z || bucket.size < BJKST_bucket_size) {
-        bucket = bucket + (s -> z_of_s)
+      if (z_of_s >= this.z) {
+        val new_bucket = this.bucket + ((s, z_of_s))
 
-        if (bucket.size > BJKST_bucket_size) {
-          bucket = bucket.toSeq.sortBy(_._2).take(BJKST_bucket_size).toSet
+        if (new_bucket.size <= BJKST_bucket_size) {
+          return new BJKSTSketch(new_bucket, this.z, BJKST_bucket_size)
+        } else {
+          var new_z = this.z + 1
+          var filtered_bucket = new_bucket.filter(_._2 >= new_z)
+
+          while (filtered_bucket.size > BJKST_bucket_size && !filtered_bucket.isEmpty) {
+            new_z += 1
+            filtered_bucket = filtered_bucket.filter(_._2 >= final_z)
+          }
+
+          return new BJKSTSketch(filtered_bucket, new_z, BJKST_bucket_size)
         }
-
-        z = bucket.minBy(_._2)._2
+      } else {
+        return this
       }
 
-      this
+      def estimate(): Double = {
+        if (bucket.isEmpty) {
+          return 0.0
+        }
+        // F0 estimate is: |B| * 2^z
+        return bucket.size * scala.math.pow(2, z)
     }
   }
 
@@ -121,55 +140,79 @@ object main{
 
 
   def BJKST(x: RDD[String], width: Int, trials: Int) : Double = {
-    val initialSketches = Seq.fill(trials)(new BJKSTSketch(Set.empty[(String, Int)], Int.MaxValue, width))
-    val hashFunc = new hash_function(2000000000)
+    val hash_functions = Array.fill(trials)(new hash_function(1L << 32)) // Using 2^32 instead of Long.MaxValue
+    
+    // Process the RDD for each trial
+    val estimates = (0 until trials).map { trial =>
 
-    val updatedSketches = x.aggregate(initialSketches) (
-      (sketches, s) => {
-        val hashedValue = hashFunc.hash(s)
-        val z = hashFunc.zeroes(hashedValue)
-        sketches.map(sketch => sketch.add_string(s, z))
-      },
-      (sketches1, sketches2) => {
-        sketches1.zip(sketches2).map { case (sk1, sk2) => sk1 + sk2}
-      }
-    )
+      val h = hash_functions(trial)
+      val initialSketch = new BJKSTSketch(Set.empty[(String, Int)], 0, width)
+      
+      val result = x.aggregate(initialSketch)(
+        (sketch, s) => {
+          val hash_value = h.hash(s)
+          val zeros = h.zeroes(hash_value)
+          sketch.add_string(s, zeros)
+        },
+        // Merge sketches
+        (sketch1, sketch2) => sketch1 + sketch2
+      )
+      
 
-    val estimates = updatedSketches.map(sketch => {
-      if (sketch.bucket.isEmpty) 0.0
-      else (width.toDouble * Math.pow(2.0, sketch.z))
-    }).sorted
+      val estimate = result.estimate()
+      // For debugging
+      println(s"Trial $trial: z=${result.z}, bucket size=${result.bucket.size}, estimate=$estimate")
 
-    val middle = estimates.length / 2
-    if (estimates.length % 2 == 0) {
-      (estimates(middle - 1) + estimates(middle)) / 2.0
+      if (estimate < 1.0 && result.bucket.nonEmpty) 1.0 else estimate
+    }
+    
+    // Return the median of the estimates
+    val sorted_estimates = estimates.sorted
+    if (trials % 2 == 0) {
+      (sorted_estimates(trials/2) + sorted_estimates(trials/2 - 1)) / 2.0
     } else {
-      estimates(middle)
+      sorted_estimates(trials/2)
     }
   }
 
 
   def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
-    val trials = width * depth
-    val hashFunctions = Seq.fill(trials)(new four_universal_Radamacher_hash_function())
+    val hash_functions = Array.fill(depth, width)(new four_universal_Radamacher_hash_function())
+    
+    val frequencies = x.map(s => (s, 1L)).reduceByKey(_ + _).cache()
+    
+    // Compute width * depth sketch values
+    val sketches = Array.ofDim[Long](depth, width)
+    
+    // For each depth and width
+    for (d <- 0 until depth) {
+      for (w <- 0 until width) {
+        val sketch_value = frequencies.map { 
+          case (s, freq) => hash_functions(d)(w).hash(s) * freq 
+        }.reduce(_ + _)
+        
 
-    val sketches = x.flatMap { s => 
-      hashFunctions.map(hash => (hash, hash.hash(s).toInt))
-    }.reduceByKey(_ + _).map {
-      case (_, sum) => sum * sum
-    }.collect()
-
-    val groups = sketches.grouped(width).toSeq.map(_.sum.toDouble / width)
-
-    val means = groups.sorted
-    val median = if (means.size % 2 == 0) {
-      val i = means.size / 2
-      (means(i - 1) + means(i)) / 2.0
-    } else {
-      means(means.size / 2)
+        sketches(d)(w) = sketch_value
+      }
     }
-    val meadianL = median.toLong
-    meadianL
+    
+    // Compute means for each depth (row)
+    val means = Array.ofDim[Double](depth)
+    for (d <- 0 until depth) {
+
+      val sum_of_squares = sketches(d).map(x => x * x).sum
+      means(d) = sum_of_squares / width
+    }
+    
+    // Return the median of the means (rounded to Long)
+    val sorted_means = means.sorted
+    val median = if (depth % 2 == 0) {
+      (sorted_means(depth/2) + sorted_means(depth/2 - 1)) / 2.0
+    } else {
+      sorted_means(depth/2)
+    }
+    
+    return median.round
   }
 
 
@@ -180,10 +223,13 @@ object main{
 
 
   def exact_F2(x: RDD[String]) : Long = {
-    x.map(plate => (plate, 1L))
-      .reduceByKey(_ + _)
-      .map { case (_, count) => count * count}
-      .reduce(_ + _)
+    val frequencies = x.map(s => (s, 1L))
+                       .reduceByKey(_ + _)
+    
+    val f2 = frequencies.map{ case (_, count) => count * count }
+                        .reduce(_ + _)
+    
+    return f2
   }
 
 
