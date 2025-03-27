@@ -1,35 +1,82 @@
-# Large Scale Data Processing: Project 2
-## Getting started
-Head to [Project 1](https://github.com/CSCI3390Spring2025/project_1) if you're looking for information on Git, template repositories, or setting up your local/remote environments.
+**Group Members:** Lukas Gearin, Zachary Blest, Elliot Frink
 
-## Resilient distributed datasets in Spark
-This project will familiarize you with RDD manipulations by implementing some of the sketching algorithms the course has covered thus far.  
+## 1. **Exact F2**
 
-You have been provided with the program's skeleton, which consists of 5 functions for computing either F0 or F2: the BJKST, tidemark, tug-of-war, exact F0, and exact F2 algorithms. The tidemark and exact F0 functions are given for your reference.
+- **LOCAL**  
+  - Time Elapsed: 19s  
+  - Estimate: 8,567,966,130  
 
-## Relevant data
+- **GCP**  
+  - Time Elapsed: 109s  
+  - Estimate: 8,567,966,130  
 
-You can find the TAR file containing `2014to2017.csv` [here](https://drive.google.com/file/d/1MtCimcVKN6JrK2sLy4GbjeS7E2a-UMA0/view?usp=sharing). Download and expand the TAR file for local processing. For processing in the cloud, refer to the steps for creating a storage bucket in [Project 1](https://github.com/CSCI3390Spring2025/project_1) and upload `2014to2017.csv`.
+---
 
-`2014to2017.csv` contains the records of parking tickets issued in New York City from 2014 to 2017. You'll see that the data has been cleaned so that only the license plate information remains. Keep in mind that a single car can receive multiple tickets within that period and therefore appear in multiple records.  
+## 2. **Tug-of-War**
 
-**Hint**: while implementing the functions, it may be helpful to copy 100 records or so to a new file and use that file for faster testing.  
+- **LOCAL**  
+  - Width: 10  
+  - Depth: 3  
+  - Time Elapsed: 91s  
+  - Estimate: 7,806,926,602  
 
-## Calculating and reporting your findings
-You'll be submitting a report along with your code that provides commentary on the tasks below.  
+- **GCP**  
+  - Tug-of-War F2 Approximation  
+  - Width: 10  
+  - Depth: 3  
+  - Time Elapsed: 141s  
+  - Estimate: 5,385,739,287  
 
-1. **(3 points)** Implement the `exact_F2` function. The function accepts an RDD of strings as an input. The output should be exactly `F2 = sum(Fs^2)`, where `Fs` is the number of occurrences of plate `s` and the sum is taken over all plates. This can be achieved in one line using the `map` and `reduceByKey` methods of the RDD class. Run `exact_F2` locally **and** on GCP with 1 driver and 4 machines having 2 x N1 cores. Copy the results to your report. Terminate the program if it runs for longer than 30 minutes.
-2. **(3 points)** Implement the `Tug_of_War` function. The function accepts an RDD of strings, a parameter `width`, and a parameter `depth` as inputs. It should run `width * depth` Tug-of-War sketches, group the outcomes into groups of size `width`, compute the means of each group, and then return the median of the `depth` means in approximating F2. A 4-universal hash function class `four_universal_Radamacher_hash_function`, which generates a hash function from a 4-universal family, has been provided for you. The generated function `hash(s: String)` will hash a string to 1 or -1, each with a probability of 50%. Once you've implemented the function, set `width` to 10 and `depth` to 3. Run `Tug_of_War` locally **and** on GCP with 1 driver and 4 machines having 2 x N1 cores. Copy the results to your report. Terminate the program if it runs for longer than 30 minutes. **Please note** that the algorithm won't be significantly faster than `exact_F2` since the number of different cars is not large enough for the memory to become a bottleneck. Additionally, computing `width * depth` hash values of the license plate strings requires considerable overhead. That being said, executing with `width = 1` and `depth = 1` should generally still be faster.
-3. **(3 points)** Implement the `BJKST` function. The function accepts an RDD of strings, a parameter `width`, and a parameter `trials` as inputs. `width` denotes the maximum bucket size of each sketch. The function should run `trials` sketches and return the median of the estimates of the sketches. A template of the `BJKSTSketch` class is also included in the sample code. You are welcome to finish its methods and apply that class or write your own class from scratch. A 2-universal hash function class `hash_function(numBuckets_in: Long)` has also been provided and will hash a string to an integer in the range `[0, numBuckets_in - 1]`. Once you've implemented the function, determine the smallest `width` required in order to achieve an error of +/- 20% on your estimate. Keeping `width` at that value, set `depth` to 5. Run `BJKST` locally **and** on GCP with 1 driver and 4 machines having 2 x N1 cores. Copy the results to your report. Terminate the program if it runs for longer than 30 minutes.
-4. **(1 point)** Compare the BJKST algorithm to the exact F0 algorithm and the tug-of-war algorithm to the exact F2 algorithm. Summarize your findings.
+---
 
-## Submission via GitHub
-Delete your project's current **README.md** file (the one you're reading right now) and include your report as a new **README.md** file in the project root directory. Have no fear—the README with the project description is always available for reading in the template repository you created your repository from. For more information on READMEs, feel free to visit [this page](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-readmes) in the GitHub Docs. You'll be writing in [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown). Be sure that your repository is up to date and you have pushed all changes you've made to the project's code. When you're ready to submit, simply provide the link to your repository in the Canvas assignment's submission.
+## 3. **Exact F0**
 
-## You must do the following to receive full credit:
-1. Create your report in the ``README.md`` and push it to your repo.
-2. In the report, you must include your (and your group members') full name in addition to any collaborators.
-3. Submit a link to your repo in the Canvas assignment.
+- **LOCAL**  
+  - Time Elapsed: 17s  
+  - Estimate: 7,406,649  
 
-## Late submission penalties
-Please refer to the course policy.
+- **GCP**  
+  - Time Elapsed: 92s  
+  - Estimate: 7,406,649  
+
+---
+
+## 4. **BJKST**
+
+- **LOCAL**  
+  - Bucket Size: 25  
+  - Trials: 5  
+  - Time Elapsed: 21s  
+  - Estimate: 8,912,896.0  
+
+- **GCP**  
+  - Bucket Size: 25  
+  - Trials: 5  
+  - Time Elapsed: 166s  
+  - Estimate: 5,767,168.0  
+
+---
+
+## BJKST Algorithm Analysis:
+
+For the BJKST algorithm, the relative error is approximately `1/√width`. We want to achieve an error of ±20%. To do this, we set up the inequality:
+
+`1/√width ≤ 0.2`
+
+Solving for `width`, we get:
+
+`√width ≥ 1/0.2 = 5`
+
+Therefore, the optimal `width` is:
+
+`width ≥ 25`
+
+The smallest width that meets the error requirement is **25**. This value does not depend on the actual value of F0.
+
+---
+## Overall Analysis
+   - The **Exact F0** and **Exact F2** algorithms are significantly faster than the **BJKST** and **Tug-of-War** algorithms, both locally and on GCP, suggesting that the **Exact** algorithms are more optimized for performance in terms of time. Moreover, the **Exact** algorithms provide stable and consistent estimates, whereas the **Tug-of-War** and **BJKST** algorithms exhibit some variability in their estimates, particularly on GCP. Overall, the **BJKST** and **Tug-of-War** algorithms have longer runtimes with higher variation in estimates, which follows their more involved and computationally complex nature.
+
+The **Exact F0** algorithm performs faster than the **BJKST** algorithm both locally and on GCP. The Exact F0 algorithm takes 17 seconds locally and 92 seconds on GCP, while the BJKST algorithm takes 21 seconds locally and 166 seconds on GCP, again suggesting that Exact F0 is more efficient in terms of time than BJKST. Additionally, the Exact F0 estimate remains consistent at 7,406,649 across both local and GCP runs, whereas the BJKST algorithm’s estimates are larger locally (8,912,896.0) and smaller on GCP (5,767,168.0), proving that the BJKST algorithm involves more complex computation.
+
+The **Exact F2** algorithm is faster than the **Tug-of-War** algorithm, both locally and on GCP. The Exact F2 algorithm takes 19 seconds locally and 109 seconds on GCP, while the Tug-of-War algorithm takes 91 seconds locally and 141 seconds on GCP. The Exact F2 estimate also remains consistent at 8,567,966,130 across both local and GCP runs, whereas the Tug-of-War algorithm's estimates are larger locally (7,806,926,602) and smaller on GCP (5,385,739,287).
