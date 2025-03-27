@@ -111,7 +111,7 @@ object main{
           }
 
           return new BJKSTSketch(filtered_bucket, new_z, BJKST_bucket_size)
-        }
+          }
       } else {
         return this
       }

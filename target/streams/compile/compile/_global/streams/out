@@ -1,7 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/Users/zacharyblest/CSCI3390Spring2025-project_1_zach/src/main/scala/project_2/main.scala:131:39: value add_strings is not a member of project_2.main.BJKSTSketch[0m
-[0m[[0m[31merror[0m] [0m[0m        sketches.map(sketch => sketch.add_strings(s, z))[0m
-[0m[[0m[31merror[0m] [0m[0m                                      ^[0m
-[0m[[0m[31merror[0m] [0m[0m/Users/zacharyblest/CSCI3390Spring2025-project_1_zach/src/main/scala/project_2/main.scala:140:19: value todouble is not a member of Int[0m
-[0m[[0m[31merror[0m] [0m[0m      else (width.todouble * Math.pow(2.0, sketch.z))[0m
-[0m[[0m[31merror[0m] [0m[0m                  ^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/zacharyblest/CSCI3390Spring2025-project_2_zach/src/main/scala/project_2/main.scala:125:5: Missing closing brace `}' assumed here[0m
+[0m[[0m[31merror[0m] [0m[0m    }[0m
+[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m
