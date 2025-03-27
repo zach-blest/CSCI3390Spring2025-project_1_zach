@@ -189,7 +189,7 @@ object main{
 
 
   def main(args: Array[String]) {
-    val spark = SparkSession.builder().appName("Project_2").getOrCreate()
+    val spark = SparkSession.builder().appName("Project_2").master("local[*]").getOrCreate()
 
     if(args.length < 2) {
       println("Usage: project_2 input_path option = {BJKST, tidemark, ToW, exactF2, exactF0} ")
