@@ -112,9 +112,9 @@ object main{
     val hashFunctions = Seq.fill(trials)(new four_universal_Radamacher_hash_function())
 
     val sketches = x.flatMap { s => 
-      hashFunctions.amp(has, hash.hash(s).toInt)
+      hashFunctions.map(hash => (hash, hash.hash(s).toInt))
     }.reduceByKey(_ + _).map {
-      case (hash, sum) => sum * sum
+      case (_, sum) => sum * sum
     }.collect()
 
     val groups = sketches.grouped(width).toSeq.map(_.sum.toDouble / width)
