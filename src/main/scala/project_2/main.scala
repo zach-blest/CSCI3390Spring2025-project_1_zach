@@ -78,11 +78,31 @@ object main{
     }
 
     def +(that: BJKSTSketch): BJKSTSketch = {    /* Merging two sketches */
+      val combinedBucket = (this.bucket ++ that.bucket)
 
+      if (combinedBucket.size > BJKST_bucket_size) {
+        bucket = combinedBucket.toSeq.sortBy(_._2).take(BJKST_bucket_size).toSet
+      } else {
+        bucket = combinedBucket
+      }
+
+      z = bucket.minBy(_._2)._2
+
+      this
     }
 
     def add_string(s: String, z_of_s: Int): BJKSTSketch = {   /* add a string to the sketch */
+      if (z_of_s < this.z || bucket.size < BJKST_bucket_size) {
+        bucket = bucket + (s -> z_of_s)
 
+        if (bucket.size > BJKST_bucket_size) {
+          bucket = bucket.toSeq.sortBy(_._2).take(BJKST_bucket_size).toSet
+        }
+
+        z = bucket.minBy(_._2)._2
+      }
+
+      this
     }
   }
 
@@ -127,7 +147,7 @@ object main{
       means(means.size / 2)
     }
 
-    return median
+    median
   }
 
 
