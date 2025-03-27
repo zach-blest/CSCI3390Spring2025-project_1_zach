@@ -128,7 +128,7 @@ object main{
       (sketches, s) => {
         val hashedValue = hashFunc.hash(s)
         val z = hashFunc.zeroes(hashedValue)
-        sketches.map(sketch => sketch.add_strings(s, z))
+        sketches.map(sketch => sketch.add_string(s, z))
       },
       (sketches1, sketches2) => {
         sketches1.zip(sketches2).map { case (sk1, sk2) => sk1 + sk2}
@@ -137,7 +137,7 @@ object main{
 
     val estimates = updatedSketches.map(sketch => {
       if (sketch.bucket.isEmpty) 0.0
-      else (width.todouble * Math.pow(2.0, sketch.z))
+      else (width.toDouble * Math.pow(2.0, sketch.z))
     }).sorted
 
     val middle = estimates.length / 2
