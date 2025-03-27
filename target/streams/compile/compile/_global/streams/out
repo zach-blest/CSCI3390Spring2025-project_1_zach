@@ -1,4 +1,4 @@
-[0m[[0m[31merror[0m] [0m[0m/Users/zacharyblest/CSCI3390Spring2025-project_2_zach/src/main/scala/project_2/main.scala:125:5: Missing closing brace `}' assumed here[0m
-[0m[[0m[31merror[0m] [0m[0m    }[0m
-[0m[[0m[31merror[0m] [0m[0m    ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/zacharyblest/CSCI3390Spring2025-project_2_zach/src/main/scala/project_2/main.scala:130:3: Missing closing brace `}' assumed here[0m
+[0m[[0m[31merror[0m] [0m[0m  def tidemark(x: RDD[String], trials: Int): Double = {[0m
+[0m[[0m[31merror[0m] [0m[0m  ^[0m
 [0m[[0m[31merror[0m] [0m[0mone error found[0m

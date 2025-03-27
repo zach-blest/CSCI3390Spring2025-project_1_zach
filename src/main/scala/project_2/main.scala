@@ -30,8 +30,7 @@ object main{
       return ((a * t + b) % p) % numBuckets;
     }
 
-    def zeroes(num: Long, remain: Long): Int =
-    {
+    def zeroes(num: Long, remain: Long): Int = {
       if((num & 1) == 1 || remain==1)
         return 0;
       return 1+zeroes(num >> 1, remain >> 1);
@@ -70,53 +69,59 @@ object main{
     var z: Int = z_in
 
     val BJKST_bucket_size = bucket_size_in
-    //val z = z_in
 
     def this(s: String, z_of_s: Int, bucket_size_in: Int){
-      /* A constructor that allows you pass in a single string, zeroes of the string, and the bucket size to initialize the sketch */
+      /* A constructor that allows you pass in a single string zeroes of the string and the bucket size to initialize the sketch */
       this(Set((s, z_of_s )) , z_of_s, bucket_size_in)
     }
 
     def +(that: BJKSTSketch): BJKSTSketch = {    /* Merging two sketches */
+      // Handle empty bucket cases
       if (this.bucket.isEmpty) return that
       if (that.bucket.isEmpty) return this
+      
 
       val merged_bucket = this.bucket ++ that.bucket
       val merged_z = scala.math.max(this.z, that.z)
-
+      
+      // Filter the bucket to only include elements with zeroes >= z
       var filtered_bucket = merged_bucket.filter(_._2 >= merged_z)
       var final_z = merged_z
+      
 
-      while (filtered_bucket.size > BJKST_bucket_size && !filtered_bucket.isEmpty){
+      while (filtered_bucket.size > BJKST_bucket_size && !filtered_bucket.isEmpty) {
         final_z += 1
         filtered_bucket = filtered_bucket.filter(_._2 >= final_z)
       }
-
+      
       return new BJKSTSketch(filtered_bucket, final_z, BJKST_bucket_size)
     }
 
     def add_string(s: String, z_of_s: Int): BJKSTSketch = {   /* add a string to the sketch */
+      // Check if the string has enough trailing zeros to be included
       if (z_of_s >= this.z) {
         val new_bucket = this.bucket + ((s, z_of_s))
-
+        
+        // If bucket is not too large return with same z
         if (new_bucket.size <= BJKST_bucket_size) {
           return new BJKSTSketch(new_bucket, this.z, BJKST_bucket_size)
-        } else {
+        } 
+        else {
           var new_z = this.z + 1
           var filtered_bucket = new_bucket.filter(_._2 >= new_z)
-
+          
           while (filtered_bucket.size > BJKST_bucket_size && !filtered_bucket.isEmpty) {
             new_z += 1
-            filtered_bucket = filtered_bucket.filter(_._2 >= final_z)
+            filtered_bucket = filtered_bucket.filter(_._2 >= new_z)
           }
-
+          
           return new BJKSTSketch(filtered_bucket, new_z, BJKST_bucket_size)
-          }
+        }
       } else {
         return this
       }
     }
-
+    
     def estimate(): Double = {
       if (bucket.isEmpty) {
         return 0.0
@@ -124,7 +129,7 @@ object main{
       // F0 estimate is: |B| * 2^z
       return bucket.size * scala.math.pow(2, z)
     }
-
+  }
 
 
   def tidemark(x: RDD[String], trials: Int): Double = {
@@ -178,6 +183,7 @@ object main{
 
 
   def Tug_of_War(x: RDD[String], width: Int, depth:Int) : Long = {
+
     val hash_functions = Array.fill(depth, width)(new four_universal_Radamacher_hash_function())
     
     val frequencies = x.map(s => (s, 1L)).reduceByKey(_ + _).cache()
@@ -236,7 +242,7 @@ object main{
 
 
   def main(args: Array[String]) {
-    val spark = SparkSession.builder().appName("Project_2").master("local[*]").getOrCreate()
+    val spark = SparkSession.builder().appName("Project_2").getOrCreate()
 
     if(args.length < 2) {
       println("Usage: project_2 input_path option = {BJKST, tidemark, ToW, exactF2, exactF0} ")
@@ -244,8 +250,8 @@ object main{
     }
     val input_path = args(0)
 
-    val df = spark.read.format("csv").load("data/2014to2017.csv")
-    //val df = spark.read.format("csv").load(input_path)
+  //    val df = spark.read.format("csv").load("data/2014to2017.csv")
+    val df = spark.read.format("csv").load(input_path)
     val dfrdd = df.rdd.map(row => row.getString(0))
 
     val startTimeMillis = System.currentTimeMillis()
@@ -323,4 +329,3 @@ object main{
 
   }
 }
-
